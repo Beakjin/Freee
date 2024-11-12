@@ -114,7 +114,7 @@ def on_ok():
         except Exception as e:
             print("修正ボタンまたは指定のXPathが見つかりません:", e)
 
-    timer = threading.Timer(10, check_break_start, [driver])
+    timer = threading.Timer(18000, check_break_start, [driver])
     timer.start()
 
 def check_break_start(driver):
