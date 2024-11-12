@@ -61,7 +61,7 @@ def on_ok():
     # 現在の出勤時刻を取得
     shukkin = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
-    
+    window.after(1000, on_Cliqwork_start)
     
     options = Options()
     options.add_argument("--headless")  # ヘッドレスモードでバックグラウンド実行
@@ -191,6 +191,8 @@ def on_end():
     global taikin
     taikin = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+    window.after(1000, on_Cliqwork_start)
+
     options = Options()
     options.add_argument("--headless")  # ヘッドレスモードでバックグラウンド実行
     options.add_argument("--no-sandbox")
@@ -241,10 +243,38 @@ def on_Cliqkyuukei_start():
     status_text.click()
     time.sleep(1)
 
+def on_Cliqwork_start():
+
+    options = Options()
+    options.add_argument("--headless")  # ヘッドレスモードでバックグラウンド実行
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+    
+    driver = webdriver.Chrome(options=options)
+    driver.get(Cliq_url)
+    time.sleep(3)
+
+    login_field = driver.find_element(By.XPATH, '//*[@id="login_id"]')
+    login_field.send_keys(user_id)
+    next_button = driver.find_element(By.XPATH, '//span[text()="次へ"]')
+    next_button.click()    
+    time.sleep(5)
+    password_field = driver.find_element(By.XPATH, '//*[@id="password"]')
+    password_field.send_keys(user_password)
+    time.sleep(5)
+    login_button = driver.find_element(By.XPATH, '//*[@id="nextbtn"]/span')
+    login_button.click()
+    time.sleep(5)
+    status_text = driver.find_element(By.XPATH, '//span[@class="slider"]')
+    status_text.click()
+    time.sleep(1)
+
 def on_kyuukei_end():
     global end
     end = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     times_label.config(text=times_label.cget("text") + f"休憩終了: {end}\n")
+
 
     options = Options()
     options.add_argument("--headless")  # ヘッドレスモードでバックグラウンド実行
@@ -286,7 +316,40 @@ def on_home():
 
     window.after()
     
+def show_description_window():
+    # 新しいウィンドウ（Toplevel）を作成
+    description_window = tk.Toplevel(window)
+    description_window.title("説明文")
+    description_window.geometry("500x400")
 
+    # 説明文を表示する複数のLabelを設定
+    description_label2 = tk.Label(description_window, text="ツールについて\n", wraplength=350, justify="left", fg="blue")
+    description_label2.pack(pady=2)
+
+    description_label1 = tk.Label(description_window, text="このボタンの機能は以下の通りです。\n"
+                                         "出勤 : 出勤時にボタンを押すと打刻が開始されます。\n"
+                                         "休憩開始 : 勤務時間内での休憩開始時間が登録されます。\n"
+                                         "退勤 : 退勤時にボタンを押すと打刻が終了されます。\n"
+                              , wraplength=350, justify="left")
+    description_label1.pack(pady=2)
+
+    description_label2 = tk.Label(description_window, text="注意 : 出勤時について\n", wraplength=350, justify="left", fg="red")
+    description_label2.pack(pady=2)
+
+    description_label3 = tk.Label(description_window, text="出勤時に、前回の出勤実績が残っている（退勤を押せていない）場合は\n"
+                                    "Freeeの仕様上退勤ボタンのみが残り、出勤が押せないため\n"
+                                    "手動で退勤処理を行った後、ツール上で出勤ボタンを押下してください。\n"
+                            , wraplength=350, justify="left")
+    description_label3.pack(pady=2)
+
+    description_label4 = tk.Label(description_window, text="休憩時間について\n", wraplength=350, justify="left", fg="red")
+    description_label4.pack(pady=2)
+
+    description_label5 = tk.Label(description_window, text="出勤後5時間たっても、休憩開始をしていない場合休憩実施確認が表示されます。\n"
+                                    "休憩をとっていないと毎月の給与精算処理が正常に行えないため必ず休憩処理をお願いします。\n"
+                                    "（休憩確認表示時すでに実際に休憩をとっている場合は、～～を押してください。自動で休憩処理を行います。）\n"
+                                    , wraplength=350, justify="left")
+    description_label5.pack(pady=2)
 
 # Label to display times
 times_label = tk.Label(window, text="", justify="left")
@@ -307,6 +370,10 @@ end_button.pack(side="right", padx=10, pady=10)
 
 kyuukei_end_button = tk.Button(window, text="休憩終了", command=on_kyuukei_end)
 kyuukei_end_button.pack(side="right", padx=10, pady=10)
+
+description_button = tk.Button(window, text="説明を見る", command=show_description_window)
+description_button.place(x=310, y=10, anchor="ne")
+
 
 # Display the window
 window.mainloop()
