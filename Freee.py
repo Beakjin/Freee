@@ -61,7 +61,7 @@ def on_ok():
     # 現在の出勤時刻を取得
     shukkin = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
-    window.after(1000, on_Cliqwork_start)
+    window.after(500, on_Cliqwork_start)
     
     options = Options()
     options.add_argument("--headless")  # ヘッドレスモードでバックグラウンド実行
@@ -113,47 +113,6 @@ def on_ok():
 
         except Exception as e:
             print("修正ボタンまたは指定のXPathが見つかりません:", e)
-
-    timer = threading.Timer(18000, check_break_start, [driver])
-    timer.start()
-
-def check_break_start(driver):
-    try: 
-        options = Options()
-        options.add_argument("--headless")  # ヘッドレスモードでバックグラウンド実行
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
-        options.add_argument("--disable-gpu")
-
-        driver = webdriver.Chrome(options=options)
-        driver.get(free_url)
-        time.sleep(3)
-
-    # ログイン処理
-        login_field = driver.find_element(By.XPATH, '//*[@id="loginIdField"]')
-        login_field.send_keys(user_id)
-        password_field = driver.find_element(By.XPATH, '//*[@id="passwordField"]')
-        password_field.send_keys(user_password)
-        login_button = driver.find_element(By.XPATH, '//span[text()="ログイン"]')
-        login_button.click()
-        time.sleep(5)
-
-        fix_button = driver.find_element(By.XPATH, '//span[text()="修正"]')
-        fix_button.click()
-        time.sleep(3)
-        
-        # 「休憩開始」が表示されているか確認
-        try:
-            break_start = driver.find_element(By.XPATH, '//span[@class="vb-tableListCell__text" and text()="休憩開始"]')
-            print("休憩開始が確認されました。処理を終了します。")
-        except:
-            # 休憩開始が表示されていない場合、メッセージボックスを表示
-            print("休憩開始が見つかりませんでした。")
-            messagebox.showinfo("休憩確認", "休憩を取りましたか？")
-            
-    except Exception as e:
-        print("修正ボタンまたは指定のXPathが見つかりません:", e)
-
 
 def on_start():
     global break_start_time
