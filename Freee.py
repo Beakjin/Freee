@@ -88,9 +88,11 @@ def check_work():
         try:
             button = driver.find_element(By.XPATH, '//span[text()="出勤"]')
             print("出勤ボタンが見つかりました。")
+            messagebox.showinfo("Freee", "Freeeの使用準備が完了しました。")
             return  # 出勤ボタンがある場合は何もしない
         except:
             print("出勤ボタンが見つかりません。修正ボタンをクリックします。")
+            
 
         # 修正ボタンをクリック
         fix_button = driver.find_element(By.XPATH, '//span[text()="修正"]')
@@ -559,6 +561,7 @@ def show_description_window():
     description_label1 = tk.Label(description_window, text="このボタンの機能は以下の通りです。\n"
                                          "出勤 : 出勤時にボタンを押すと打刻が開始されます。\n"
                                          "休憩開始 : 勤務時間内での休憩開始時間が登録されます。\n"
+                                         "ホーム : Freeeのホーム画面が表示されます。\n"
                                          "退勤 : 退勤時にボタンを押すと打刻が終了されます。\n"
                               , wraplength=350, justify="left")
     description_label1.pack(pady=2)
