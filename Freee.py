@@ -13,23 +13,23 @@ import json
 free_url = "https://accounts.secure.freee.co.jp/sessions/new?redirect_url=https%3A%2F%2Fp.secure.freee.co.jp%2Fusers%2Fafter_login%3Fhash%3D&service_name=payroll&sign_up_url=https%3A%2F%2Faccounts.secure.freee.co.jp%2Fsign_up%3Finitial_service%3Dpayroll%26login_url%3Dhttps%253A%252F%252Fp.secure.freee.co.jp%252F%26prefer%3Demail%26redirect_url%3Dhttps%253A%252F%252Fp.secure.freee.co.jp%252Factivation%26service_name%3Dpayroll%26verification_type%3Dcode"
 Cliq_url = "https://accounts.zoho.jp/signin?servicename=ZohoChat&signupurl=https://www.zoho.com/cliq/signup.html"
 # File to store credentials
-credentials_file = "credentials.json"
-
+Freeecredentials_file = "Freeecredentials.json"
+Cliqcredentials_file = "Cliqcredentials.json"
 # Function to load or ask for credentials
 def get_credentials():
-    if os.path.exists(credentials_file):
+    if os.path.exists(Freeecredentials_file):
         use_saved = messagebox.askyesno("ログイン情報入力確認", "以前に入力したIDとパスワードを使用しますか？")
         if use_saved:
-            with open(credentials_file, 'r') as f:
+            with open(Freeecredentials_file, 'r') as f:
                 credentials = json.load(f)
             return credentials.get("user_id"), credentials.get("user_password")
     
     # Prompt for new credentials if no file exists or user selects "No"
-    user_id = simpledialog.askstring("ユーザーID", "IDを入力してください:")
-    user_password = simpledialog.askstring("パスワード", "パスワードを入力してください:", show='*')
+    user_id = simpledialog.askstring("Freee", "Freee ID")
+    user_password = simpledialog.askstring("Freee", "Freee PW", show='*')
     
     # Save credentials to file
-    with open(credentials_file, 'w') as f:
+    with open(Freeecredentials_file, 'w') as f:
         json.dump({"user_id": user_id, "user_password": user_password}, f)
     
     return user_id, user_password
@@ -37,10 +37,38 @@ def get_credentials():
 # Get user ID and password
 user_id, user_password = get_credentials()
 
+def get_credentials():
+    if os.path.exists(Cliqcredentials_file):
+        use_saved = messagebox.askyesno("ログイン情報入力確認", "以前に入力したIDとパスワードを使用しますか？")
+        if use_saved:
+            with open(Cliqcredentials_file, 'r') as f:
+                credentials = json.load(f)
+            return credentials.get("user_id"), credentials.get("user_password")
+    
+    # Prompt for new credentials if no file exists or user selects "No"
+    Cliquser_id = simpledialog.askstring("Cliq", "Cliq ID")
+    Cliquser_password = simpledialog.askstring("Cliq", "Cliq PW", show='*')
+    
+    # Save credentials to file
+    with open(Cliqcredentials_file, 'w') as f:
+        json.dump({"user_id": Cliquser_id, "user_password": Cliquser_password}, f)
+    
+    return Cliquser_id, Cliquser_password
+
+# Get user ID and password
+Cliquser_id, Cliquser_password = get_credentials()
+print(f"Freee ユーザーID: {user_id}")
+print(f"Freee ユーザーPW: {user_password}")
+print(f"Cliq ユーザーID: {Cliquser_id}")
+print(f"Cliq ユーザーPW: {Cliquser_password}")
+
+
+
+
 # Create window
 window = tk.Tk()
 window.title("freee出退勤打刻")
-window.geometry("330x400")
+window.geometry("400x400")
 
 # Get current date
 current_date = datetime.now().strftime("%Y-%m-%d")
@@ -56,13 +84,14 @@ date_label.pack(pady=5)
 # Initialize start time for break
 break_start_time = None
 
+
 def check_work():
     
 
     try:
     
 
-        today = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        today = datetime.now().strftime("%Y-%m-%d %H:%M")
 
         options = Options()
         options.add_argument("--headless")  # ヘッドレスモードでバックグラウンド実行
@@ -168,7 +197,7 @@ window.after(100, check_work)
 # Functions for each action button
 def on_ok():
     # 現在の出勤時刻を取得
-    shukkin = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    shukkin = datetime.now().strftime("%Y-%m-%d %H:%M")
     
     window.after(500, on_Cliqwork_start)
     
@@ -226,7 +255,7 @@ def on_ok():
 def on_start():
     global break_start_time
     break_start_time = datetime.now()
-    start = break_start_time.strftime("%Y-%m-%d %H:%M:%S")
+    start = break_start_time.strftime("%Y-%m-%d %H:%M")
     
     times_label.config(text=times_label.cget("text") + f"休憩開始: {start}\n")
     window.after(1000, on_Cliqkyuukei_start)
@@ -256,9 +285,9 @@ def on_start():
 
 
 def on_end():
-    messagebox.showinfo("Freee", "今日も一日お疲れ様でした。")
+    
     global taikin
-    taikin = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    taikin = datetime.now().strftime("%Y-%m-%d %H:%M")
 
     window.after(1000, on_Cliqwork_end)
 
@@ -282,10 +311,33 @@ def on_end():
 
     button1 = driver.find_element(By.XPATH, '//span[text()="退勤"]')
     button1.click()
+
     time.sleep(5)
     
+def on_Cliqk_home():
+    print(f"Cliq ユーザーID: {user_id}")
+    print(f"Cliq ユーザーID: {user_password}")
+    print(f"Cliq ユーザーID: {Cliquser_id}")
+    print(f"Cliq ユーザーID: {Cliquser_password}")
 
     
+    driver = webdriver.Chrome()
+    driver.get(Cliq_url)
+    time.sleep(3)
+    
+    login_field = driver.find_element(By.XPATH, '//*[@id="login_id"]')
+    login_field.send_keys(Cliquser_id)
+    next_button = driver.find_element(By.XPATH, '//span[text()="次へ"]')
+    next_button.click()    
+    time.sleep(5)
+    password_field = driver.find_element(By.XPATH, '//*[@id="password"]')
+    password_field.send_keys(Cliquser_password)
+    time.sleep(5)
+    login_button = driver.find_element(By.XPATH, '//*[@id="nextbtn"]/span')
+    login_button.click()
+    window.after()
+    
+
 def on_Cliqkyuukei_start():
 
     options = Options()
@@ -299,12 +351,12 @@ def on_Cliqkyuukei_start():
     time.sleep(3)
 
     login_field = driver.find_element(By.XPATH, '//*[@id="login_id"]')
-    login_field.send_keys(user_id)
+    login_field.send_keys(Cliquser_id)
     next_button = driver.find_element(By.XPATH, '//span[text()="次へ"]')
     next_button.click()    
     time.sleep(5)
     password_field = driver.find_element(By.XPATH, '//*[@id="password"]')
-    password_field.send_keys(user_password)
+    password_field.send_keys(Cliquser_password)
     time.sleep(5)
     login_button = driver.find_element(By.XPATH, '//*[@id="nextbtn"]/span')
     login_button.click()
@@ -352,12 +404,12 @@ def on_Cliqkyuukei_end():
     time.sleep(3)
 
     login_field = driver.find_element(By.XPATH, '//*[@id="login_id"]')
-    login_field.send_keys(user_id)
+    login_field.send_keys(Cliquser_id)
     next_button = driver.find_element(By.XPATH, '//span[text()="次へ"]')
     next_button.click()    
     time.sleep(5)
     password_field = driver.find_element(By.XPATH, '//*[@id="password"]')
-    password_field.send_keys(user_password)
+    password_field.send_keys(Cliquser_password)
     time.sleep(5)
     login_button = driver.find_element(By.XPATH, '//*[@id="nextbtn"]/span')
     login_button.click()
@@ -404,12 +456,12 @@ def on_Cliqwork_start():
     time.sleep(3)
     
     login_field = driver.find_element(By.XPATH, '//*[@id="login_id"]')
-    login_field.send_keys(user_id)
+    login_field.send_keys(Cliquser_id)
     next_button = driver.find_element(By.XPATH, '//span[text()="次へ"]')
     next_button.click()    
     time.sleep(5)
     password_field = driver.find_element(By.XPATH, '//*[@id="password"]')
-    password_field.send_keys(user_password)
+    password_field.send_keys(Cliquser_password)
     time.sleep(5)
     login_button = driver.find_element(By.XPATH, '//*[@id="nextbtn"]/span')
     login_button.click()
@@ -457,12 +509,12 @@ def on_Cliqwork_end():
     time.sleep(3)
     
     login_field = driver.find_element(By.XPATH, '//*[@id="login_id"]')
-    login_field.send_keys(user_id)
+    login_field.send_keys(Cliquser_id)
     next_button = driver.find_element(By.XPATH, '//span[text()="次へ"]')
     next_button.click()    
     time.sleep(5)
     password_field = driver.find_element(By.XPATH, '//*[@id="password"]')
-    password_field.send_keys(user_password)
+    password_field.send_keys(Cliquser_password)
     time.sleep(5)
     login_button = driver.find_element(By.XPATH, '//*[@id="nextbtn"]/span')
     login_button.click()
@@ -499,11 +551,13 @@ def on_Cliqwork_end():
     status_text = driver.find_element(By.XPATH, '//span[@class="slider"]')
     status_text.click()
     time.sleep(1)
+    messagebox.showinfo("Freee", "今日も一日お疲れ様でした。")
+    time.sleep(1)
     window.quit()
 
 def on_kyuukei_end():
     global end
-    end = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    end = datetime.now().strftime("%Y-%m-%d %H:%M")
     times_label.config(text=times_label.cget("text") + f"休憩終了: {end}\n")
     #window.after(1000, on_Cliqkyuukei_end)
 
@@ -532,7 +586,7 @@ def on_kyuukei_end():
 
 def on_home():
     global home
-    end = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    end = datetime.now().strftime("%Y-%m-%d %H:%M")
     
     
     driver = webdriver.Chrome()
@@ -578,7 +632,8 @@ def show_description_window():
     description_label4 = tk.Label(description_window, text="休憩について\n", wraplength=350, justify="left", fg="red")
     description_label4.pack(pady=2)
 
-    description_label5 = tk.Label(description_window, text="休憩開始60分後に自動で休憩終了を打刻します。\n"
+    description_label5 = tk.Label(description_window, text="休憩時、ツールを開いたままにしておくと\n"
+                                  "休憩開始60分後に自動で休憩終了を打刻します。\n"
 
                                     , wraplength=350, justify="left")
     description_label5.pack(pady=2)
@@ -589,16 +644,20 @@ times_label.pack(pady=10)
 
 # Create buttons
 ok_button = tk.Button(window, text="出勤", command=on_ok, width=5, height=1)
-ok_button.pack(side="left", padx=15, pady=15)
+ok_button.pack(side="left", padx=10, pady=10)
 
 start_button = tk.Button(window, text="休憩開始", command=on_start, width=7, height=1)
-start_button.pack(side="left", padx=15, pady=15)
+start_button.pack(side="left", padx=10, pady=10)
+
+home_button = tk.Button(window, text="Freeeホーム", command=on_home, width=8, height=1)
+home_button.pack(side="left", padx=15, pady=15)
+
+kyuukei_end_button = tk.Button(window, text="Cliqホーム", command=on_Cliqk_home, width=8, height=1)
+kyuukei_end_button.pack(side="left", padx=10, pady=10)
 
 end_button = tk.Button(window, text="退勤", command=on_end, width=5, height=1)
-end_button.pack(side="right", padx=10, pady=10)
+end_button.pack(side="left", padx=10, pady=10)
 
-home_button = tk.Button(window, text="ホーム", command=on_home, width=5, height=1)
-home_button.pack(side="right", padx=30, pady=30)
 
 
 
@@ -606,7 +665,7 @@ home_button.pack(side="right", padx=30, pady=30)
 #kyuukei_end_button.pack(side="right", padx=10, pady=10)
 
 description_button = tk.Button(window, text="説明を見る", command=show_description_window)
-description_button.place(x=310, y=10, anchor="ne")
+description_button.place(x=350, y=10, anchor="ne")
 
 
 # Display the window
