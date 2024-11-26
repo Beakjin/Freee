@@ -5,9 +5,13 @@ from datetime import datetime, timedelta
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.keys import Keys
 import time
 import os
 import json
+import pyperclip
+from tkinter import font
+import webbrowser
 
 # Freee login URL
 free_url = "https://accounts.secure.freee.co.jp/sessions/new?redirect_url=https%3A%2F%2Fp.secure.freee.co.jp%2Fusers%2Fafter_login%3Fhash%3D&service_name=payroll&sign_up_url=https%3A%2F%2Faccounts.secure.freee.co.jp%2Fsign_up%3Finitial_service%3Dpayroll%26login_url%3Dhttps%253A%252F%252Fp.secure.freee.co.jp%252F%26prefer%3Demail%26redirect_url%3Dhttps%253A%252F%252Fp.secure.freee.co.jp%252Factivation%26service_name%3Dpayroll%26verification_type%3Dcode"
@@ -65,10 +69,11 @@ print(f"Cliq ユーザーPW: {Cliquser_password}")
 
 
 
+
 # Create window
 window = tk.Tk()
 window.title("freee出退勤打刻")
-window.geometry("400x400")
+window.geometry("410x400")
 
 # Get current date
 current_date = datetime.now().strftime("%Y-%m-%d")
@@ -84,27 +89,86 @@ date_label.pack(pady=5)
 # Initialize start time for break
 break_start_time = None
 
+# JSONファイルのパスを設定
 
-def check_work():
-    
+startworkt_click_time = "startwork_click_time.json"
+startrest_click_time = "startrest_click_time.json"
+endrest_click_time = "endrest_click_time.json"
+endwork_click_time = "endwork_click_time.json"
 
-    try:
-    
 
-        today = datetime.now().strftime("%Y-%m-%d %H:%M")
+# JSONファイルを読み込む
+# startwork
+try:
+    with open(startworkt_click_time, 'r', encoding='utf-8') as file:
+        startwork_click_timedata = json.load(file)
+    print("startwork:")
+    print(json.dumps(startwork_click_timedata, ensure_ascii=False, indent=4))
+except FileNotFoundError:
+    print(f"{startworkt_click_time} が見つかりません。ファイルのパスを確認してください。")
+except json.JSONDecodeError:
+    print(f"{startworkt_click_time} は正しいJSON形式ではありません。")
 
+
+# startrest
+try:
+    with open(startrest_click_time, 'r', encoding='utf-8') as file:
+        startrest_click_timedata = json.load(file)
+    print("startrest:")
+    print(json.dumps(startrest_click_timedata, ensure_ascii=False, indent=4))
+except FileNotFoundError:
+    print(f"{startrest_click_time} が見つかりません。ファイルのパスを確認してください。")
+except json.JSONDecodeError:
+    print(f"{startrest_click_time} は正しいJSON形式ではありません。")
+
+
+# endrest
+try:
+    with open(endrest_click_time, 'r', encoding='utf-8') as file:
+        endrest_click_timedata = json.load(file)
+    print("endrest:")
+    print(json.dumps(endrest_click_timedata, ensure_ascii=False, indent=4))
+except FileNotFoundError:
+    print(f"{endrest_click_time} が見つかりません。ファイルのパスを確認してください。")
+except json.JSONDecodeError:
+    print(f"{endrest_click_time} は正しいJSON形式ではありません。")
+
+# endwork
+try:
+    with open(endwork_click_time, 'r', encoding='utf-8') as file:
+        endwork_click_timedata = json.load(file)
+    print("endwork:")
+    print(json.dumps(endwork_click_timedata, ensure_ascii=False, indent=4))
+except FileNotFoundError:
+    print(f"{endwork_click_time} が見つかりません。。")
+except json.JSONDecodeError:
+    print(f"{endwork_click_time} は正しいJSON形式ではありません。")
+
+
+
+
+# Functions for each action button
+def on_ok():
+    new_window = tk.Toplevel(window)
+    new_window.title("出勤時間を選択")
+    new_window.geometry("300x100")
+
+    def select_9am():
+        print("9時出勤が選択されました")
+        shukkin = datetime.now().strftime("%Y-%m-%d %H:%M")
+        window.after(500, on_Cliqwork_start)
+      
         options = Options()
         options.add_argument("--headless")  # ヘッドレスモードでバックグラウンド実行
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-gpu")
 
-        # WebDriverの起動
         driver = webdriver.Chrome(options=options)
         driver.get(free_url)
         time.sleep(3)
 
-        # ログイン処理
+    # ログイン処理
         login_field = driver.find_element(By.XPATH, '//*[@id="loginIdField"]')
         login_field.send_keys(user_id)
         password_field = driver.find_element(By.XPATH, '//*[@id="passwordField"]')
@@ -112,177 +176,121 @@ def check_work():
         login_button = driver.find_element(By.XPATH, '//span[text()="ログイン"]')
         login_button.click()
         time.sleep(5)
-
-        # 出勤ボタンの有無を確認
         try:
             button = driver.find_element(By.XPATH, '//span[text()="出勤"]')
-            print("出勤ボタンが見つかりました。")
-            messagebox.showinfo("Freee", "Freeeの使用準備が完了しました。")
-            return  # 出勤ボタンがある場合は何もしない
+            button.click()
         except:
-            print("出勤ボタンが見つかりません。修正ボタンをクリックします。")
-            
+            print("エラー: '出勤'ボタンが見つかりませんでした。処理をスキップします。")
 
-        # 修正ボタンをクリック
+        time.sleep(5)
+
         fix_button = driver.find_element(By.XPATH, '//span[text()="修正"]')
+        fix_button.click()
+        time.sleep(2)
+        input_field = driver.find_element(By.XPATH, '//input[@name="time_clocks[0].datetime"]')
+        time.sleep(2)
+    
+    # フィールドをクリアしてから値を入力
+        input_field.send_keys(Keys.CONTROL + "a")  # 全選択 
+        input_field.send_keys(Keys.DELETE)  # 選択部分を削除
+        input_field.send_keys("900") 
+        time.sleep(2)
+        fix_button = driver.find_element(By.XPATH, '//span[text()="保存"]')
         fix_button.click()
         time.sleep(5)
 
-        # 指定したXPathのデータを取得
-        data1, data2, data3 = None, None, None
-        try:
-            data1 = driver.find_element(By.XPATH, '(//span[@class="vb-tableListCell__text" and contains(text(), ":")])[1]').text
-            print(data1)
-        except :
-            print("データ1が見つかりませんでした。")
-            data1="1"
-            print(data1)
-    
-        try:
-            data2 = driver.find_element(By.XPATH, '(//span[@class="vb-tableListCell__text" and contains(text(), ":")])[2]').text
-            print(data2)
-        except :
-            print("データ2が見つかりませんでした。")
-            data2="1"
-            print(data2)
+        current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         
-        try:
-            data3 = driver.find_element(By.XPATH, '(//span[@class="vb-tableListCell__text" and contains(text(), ":")])[3]').text
-            print(data3)
-        except :
-            print("データ3が見つかりませんでした。")
-            data3="1"
-            print(data3)
-        
-        
-        today1 = today.split()[1]  # startworkから時間部分のみ取得（例えば、"08:00:00"）
-        todayshu = today.split()[0] + ' ' + data1
-        
-        today1 = today.split()[1]  # startworkから時間部分のみ取得（例えば、"08:00:00"）
-        todaykyustart = today.split()[0] + ' ' + data2
-
-        today1 = today.split()[1]  # startworkから時間部分のみ取得（例えば、"08:00:00"）
-        todaykyuend = today.split()[0] + ' ' + data3
-
-        # times_labelにデータを表示
-        text_content = ""
-        if data1.strip() != '1':
-           text_content += f"出勤時刻: {todayshu}\n"
-
-        if data2.strip() != '1':
-           text_content += f"休憩開始: {todaykyustart}\n"
-
-        if data3.strip() != '1':
-           text_content += f"休憩終了: {todaykyuend}"
-
-        times_label.config(text=text_content)
-        messagebox.showinfo("Freee", "Freeeの使用準備が完了しました。")
-
-    except Exception as e:
-        print("エラーが発生しました:", e)
-
-    finally:
-        # WebDriverを閉じる
-        try:
-            driver.quit()
-        except:
-            pass
-
-messagebox.showinfo("Freee", "OKを押すとステータス確認を行います。しばらくお待ちください。")
-
-# アプリ起動後すぐに処理を実行
-window.after(100, check_work)
 
 
-# Functions for each action button
-def on_ok():
-    # 現在の出勤時刻を取得
-    shukkin = datetime.now().strftime("%Y-%m-%d %H:%M")
-    
-    window.after(500, on_Cliqwork_start)
-    
-    options = Options()
-    options.add_argument("--headless")  # ヘッドレスモードでバックグラウンド実行
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-gpu")
+            # JSONファイルに保存
+        data = current_time
+        startwork_click_time = "startwork_click_time.json"
 
-    driver = webdriver.Chrome(options=options)
-    driver.get(free_url)
-    time.sleep(3)
+            # ファイルに書き込み
+        with open(startwork_click_time, 'w', encoding='utf-8') as file:
+         json.dump(data, file, ensure_ascii=False, indent=4)
 
-    # ログイン処理
-    login_field = driver.find_element(By.XPATH, '//*[@id="loginIdField"]')
-    login_field.send_keys(user_id)
-    password_field = driver.find_element(By.XPATH, '//*[@id="passwordField"]')
-    password_field.send_keys(user_password)
-    login_button = driver.find_element(By.XPATH, '//span[text()="ログイン"]')
-    login_button.click()
-    time.sleep(5)
-
-    # 出勤ボタンをクリックするが、出勤ボタンがない場合は修正ボタンをクリックして値を取得
-    try:
-        # 出勤ボタンを探してクリック
-        button = driver.find_element(By.XPATH, '//span[text()="出勤"]')
-        button.click()
-        time.sleep(5)
 
         times_label.config(text=times_label.cget("text") + f"出勤時刻: {shukkin}\n")
-    except:
-        # 出勤ボタンが見つからない場合、修正ボタンをクリック
-        print("出勤ボタンが見つかりません。修正ボタンをクリックし、値を取得します。")
-        try:
-            # 修正ボタンをクリック
-            fix_button = driver.find_element(By.XPATH, '//span[text()="修正"]')
-            fix_button.click()
-            time.sleep(8)
+        print(f"修憩開始ボタンのクリック時刻を {startwork_click_time} に保存しました。")
+        new_window.destroy()
 
-            # 値を取得
-            element = driver.find_element(By.XPATH, '//span[@class="vb-tableListCell__text" and contains(text(), ":")]')
-            startwork = element.text  # 値をstartwork変数に保存
-            print("取得した値:", startwork)
-
-            # 取得した時間部分をshukkinの時間部分と置き換える
-            startwork_time = shukkin.split()[1]  # startworkから時間部分のみ取得（例えば、"08:00:00"）
-            shukkin = shukkin.split()[0] + ' ' + startwork  # 日付部分はそのままで時間部分を置換
-
-            # 時間が置き換えられた出勤時刻を表示
-            times_label.config(text=times_label.cget("text") + f"出勤時刻: {shukkin}\n")
-
-        except Exception as e:
-            print("修正ボタンまたは指定のXPathが見つかりません:", e)
-
-def on_start():
-    global break_start_time
-    break_start_time = datetime.now()
-    start = break_start_time.strftime("%Y-%m-%d %H:%M")
+    def select_10am():
+        print("10時出勤が選択されました")
+        shukkin = datetime.now().strftime("%Y-%m-%d %H:%M")
+        window.after(500, on_Cliqwork_start)
     
-    times_label.config(text=times_label.cget("text") + f"休憩開始: {start}\n")
-    window.after(1000, on_Cliqkyuukei_start)
-    window.after(3600000, on_kyuukei_end)
+        options = Options()
+        options.add_argument("--headless")  # ヘッドレスモードでバックグラウンド実行
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-gpu")
 
-    options = Options()
-    options.add_argument("--headless")  # ヘッドレスモードでバックグラウンド実行
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-gpu")
+        driver = webdriver.Chrome(options=options)
+        driver.get(free_url)
+        time.sleep(3)
 
-    driver = webdriver.Chrome(options=options)
-    driver.get(free_url)
-    time.sleep(3)
+    # ログイン処理
+        login_field = driver.find_element(By.XPATH, '//*[@id="loginIdField"]')
+        login_field.send_keys(user_id)
+        password_field = driver.find_element(By.XPATH, '//*[@id="passwordField"]')
+        password_field.send_keys(user_password)
+        login_button = driver.find_element(By.XPATH, '//span[text()="ログイン"]')
+        login_button.click()
+        time.sleep(5)
+        
+        try:
+            button = driver.find_element(By.XPATH, '//span[text()="出勤"]')
+            button.click()
+        except:
+            print("エラー: '出勤'ボタンが見つかりませんでした。処理をスキップします。")
 
-    login_field = driver.find_element(By.XPATH, '//*[@id="loginIdField"]')
-    login_field.send_keys(user_id)
-    password_field = driver.find_element(By.XPATH, '//*[@id="passwordField"]')
-    password_field.send_keys(user_password)
-    login_button = driver.find_element(By.XPATH, '//span[text()="ログイン"]')
-    login_button.click()
-    time.sleep(5)
+        time.sleep(5)
 
-    button2 = driver.find_element(By.XPATH, '//span[text()="休憩開始"]')
-    button2.click()
-    time.sleep(5)
+        fix_button = driver.find_element(By.XPATH, '//span[text()="修正"]')
+        fix_button.click()
+        time.sleep(2)
+        input_field = driver.find_element(By.XPATH, '//input[@name="time_clocks[0].datetime"]')
+        time.sleep(2)
+    
+    # フィールドをクリアしてから値を入力
+        input_field.send_keys(Keys.CONTROL + "a")  # 全選択 
+        input_field.send_keys(Keys.DELETE)  # 選択部分を削除
+        input_field.send_keys("1000") 
+        time.sleep(2)
+        fix_button = driver.find_element(By.XPATH, '//span[text()="保存"]')
+        fix_button.click()
+        time.sleep(5)
 
+        current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+            # JSONファイルに保存
+        data = current_time
+        startwork_click_time = "startwork_click_time.json"
+
+            # ファイルに書き込み
+        with open(startwork_click_time, 'w', encoding='utf-8') as file:
+         json.dump(data, file, ensure_ascii=False, indent=4)
+
+
+        times_label.config(text=times_label.cget("text") + f"出勤時刻: {shukkin}\n")
+        print(f"修憩開始ボタンのクリック時刻を {startwork_click_time} に保存しました。")
+        new_window.destroy()        
+        
+
+    btn_9am = tk.Button(new_window, text="9時出勤", command=select_9am, width=10, height=1)
+    btn_9am.pack(pady=5)
+
+    # 10時出勤ボタン
+    btn_10am = tk.Button(new_window, text="10時出勤", command=select_10am, width=10, height=1)
+    btn_10am.pack(pady=5)
+    # 現在の出勤時刻を取得
+
+    
+
+
+    
 
 def on_end():
     
@@ -311,9 +319,71 @@ def on_end():
 
     button1 = driver.find_element(By.XPATH, '//span[text()="退勤"]')
     button1.click()
-
     time.sleep(5)
-    
+    current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    try:
+    # ファイルが存在するかチェック
+       if os.path.exists(startworkt_click_time):
+        os.remove(startworkt_click_time)  # ファイル削除
+        print(f"{startworkt_click_time} は削除されました。")
+       else:
+        print(f"{startworkt_click_time} は存在しません。削除できません。")
+    except Exception as e:
+    # エラーが発生した場合、処理を無視して何もしない
+       pass
+
+    try:
+    # ファイルが存在するかチェック
+       if os.path.exists(startrest_click_time):
+        os.remove(startrest_click_time)  # ファイル削除
+        print(f"{startrest_click_time} は削除されました。")
+       else:
+        print(f"{startrest_click_time} は存在しません。削除できません。")
+    except Exception as e:
+    # エラーが発生した場合、処理を無視して何もしない
+       pass
+
+def on_kyuukei_end():
+    global end
+    end = datetime.now().strftime("%Y-%m-%d %H:%M")
+    times_label.config(text=times_label.cget("text") + f"休憩終了: {end}\n")
+    #window.after(1000, on_Cliqkyuukei_end)
+
+
+    options = Options()
+    options.add_argument("--headless")  # ヘッドレスモードでバックグラウンド実行
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+
+    driver = webdriver.Chrome(options=options)
+    driver.get(free_url)
+    time.sleep(3)
+
+    login_field = driver.find_element(By.XPATH, '//*[@id="loginIdField"]')
+    login_field.send_keys(user_id)
+    password_field = driver.find_element(By.XPATH, '//*[@id="passwordField"]')
+    password_field.send_keys(user_password)
+    login_button = driver.find_element(By.XPATH, '//span[text()="ログイン"]')
+    login_button.click()
+    time.sleep(5)
+
+    button3 = driver.find_element(By.XPATH, '//span[text()="休憩終了"]')
+    button3.click()
+    time.sleep(5)
+    current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+            # JSONファイルに保存
+    data = current_time
+    endrest_click_time = "endrest_click_time.json"
+
+            # ファイルに書き込み
+    with open(endrest_click_time, 'w', encoding='utf-8') as file:
+         json.dump(data, file, ensure_ascii=False, indent=4)
+
+    print(f"修憩開始ボタンのクリック時刻を {endrest_click_time} に保存しました。")
+
 def on_Cliqk_home():
     print(f"Cliq ユーザーID: {user_id}")
     print(f"Cliq ユーザーID: {user_password}")
@@ -337,9 +407,8 @@ def on_Cliqk_home():
     login_button.click()
     window.after()
     
-
 def on_Cliqkyuukei_start():
-
+    beakstart = datetime.now().strftime("%Y-%m-%d %H:%M")
     options = Options()
     options.add_argument("--headless")  # ヘッドレスモードでバックグラウンド実行
     options.add_argument("--no-sandbox")
@@ -360,7 +429,7 @@ def on_Cliqkyuukei_start():
     time.sleep(5)
     login_button = driver.find_element(By.XPATH, '//*[@id="nextbtn"]/span')
     login_button.click()
-    time.sleep(10)
+    time.sleep(5)
     try:
         # 要素を探してクリック
         button = driver.find_element(By.XPATH, '//a[@class="succbutton" and text()="確認する"]')
@@ -370,26 +439,47 @@ def on_Cliqkyuukei_start():
         # 要素が見つからない場合はスキップ
         print("ボタンが見つかりませんでした。処理をスキップします。")
     time.sleep(5)
-    max_retries = 5  # 最大試行回数
+    max_retries = 3  # 最大試行回数
     attempts = 0
+
     while attempts < max_retries:
         try:
-             continue_button = driver.find_element(By.XPATH, '//a[text()="同意する"]')
-             continue_button.click()
-             print("次のボタンがクリックされました。")
-             break
+        # まず、status_text をクリックする処理
+            status_text = driver.find_element(By.XPATH, '//span[@class="meal-brk mR6"]')
+            status_text.click()
+            print("ステータスのテキストがクリックされました。")
+            break
         except:
-             attempts += 1
-             print("次のボタンが見つかりませんでした。")
-             if attempts < max_retries:
-                time.sleep(2)  # 2秒待機してから再試行
-             else:
-                 print("最大試行回数に達しました。処理を終了します。")
+            try:
+            # 現在のtryをこちらに移動
+                continue_button = driver.find_element(By.XPATH, '//a[text()="同意する"]')
+                continue_button.click()
+                print("次のボタンがクリックされました。")
+                time.sleep(5)
+                status_text = driver.find_element(By.XPATH, '//span[@class="meal-brk mR6"]')
+                status_text.click()
+                break
+            except:
+                attempts += 1
+                print("次のボタンが見つかりませんでした。")
+                if attempts < max_retries:
+                    time.sleep(2)  # 2秒待機してから再試行
+                else:
+                    print("最大試行回数に達しました。処理を終了します。")
 
-    time.sleep(8)
-    status_text = driver.find_element(By.XPATH, '//span[@class="meal-brk mR6"]')
-    status_text.click()
-    time.sleep(1)
+
+    time.sleep(5)
+    current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+            # JSONファイルに保存
+    data = current_time
+    startrest_click_time = "startrest_click_time.json"
+
+            # ファイルに書き込み
+    with open(startrest_click_time, 'w', encoding='utf-8') as file:
+         json.dump(data, file, ensure_ascii=False, indent=4)
+    times_label.config(text=times_label.cget("text") + f"休憩開始: {beakstart}\n")
+    print(f"修憩開始ボタンのクリック時刻を {startrest_click_time} に保存しました。")
 
 def on_Cliqkyuukei_end():
 
@@ -423,25 +513,32 @@ def on_Cliqkyuukei_end():
         # 要素が見つからない場合はスキップ
         print("ボタンが見つかりませんでした。処理をスキップします。")
     time.sleep(5)
-    max_retries = 5  # 最大試行回数
+    max_retries = 3  # 最大試行回数
     attempts = 0
+
     while attempts < max_retries:
         try:
-             continue_button = driver.find_element(By.XPATH, '//a[text()="同意する"]')
-             continue_button.click()
-             print("次のボタンがクリックされました。")
-             break
+        # まず、status_text をクリックする処理
+            status_text = driver.find_element(By.XPATH, "//div[contains(@class, 'laptop-work')]")
+            status_text.click()
+            print("ステータスのテキストがクリックされました。")
+            break
         except:
-             attempts += 1
-             print("次のボタンが見つかりませんでした。")
-             if attempts < max_retries:
-                time.sleep(2)  # 2秒待機してから再試行
-             else:
-                 print("最大試行回数に達しました。処理を終了します。")
-    time.sleep(8)
-    status_text = driver.find_element(By.XPATH, "//div[contains(@class, 'laptop-work')]")
-    status_text.click()
-    time.sleep(1)
+            try:
+            # 現在のtryをこちらに移動
+                continue_button = driver.find_element(By.XPATH, '//a[text()="同意する"]')
+                continue_button.click()
+                print("次のボタンがクリックされました。")
+                break
+            except:
+                attempts += 1
+                print("次のボタンが見つかりませんでした。")
+                if attempts < max_retries:
+                    time.sleep(2)  # 2秒待機してから再試行
+                else:
+                    print("最大試行回数に達しました。処理を終了します。")
+    time.sleep(5)
+
 
 def on_Cliqwork_start():
 
@@ -475,26 +572,32 @@ def on_Cliqwork_start():
         # 要素が見つからない場合はスキップ
         print("ボタンが見つかりませんでした。処理をスキップします。")
 
-    max_retries = 5  # 最大試行回数
+    max_retries = 3  # 最大試行回数
     attempts = 0
+
     while attempts < max_retries:
         try:
-             continue_button = driver.find_element(By.XPATH, '//a[text()="同意する"]')
-             continue_button.click()
-             print("次のボタンがクリックされました。")
-             break
+        # まず、status_text をクリックする処理
+            status_text = driver.find_element(By.XPATH, '//span[@class="slider"]')
+            status_text.click()
+            print("ステータスのテキストがクリックされました。")
+            break
         except:
-             attempts += 1
-             print("次のボタンが見つかりませんでした。")
-             if attempts < max_retries:
-                time.sleep(2)  # 2秒待機してから再試行
-             else:
-                 print("最大試行回数に達しました。処理を終了します。")
-    
-    time.sleep(8)
-    status_text = driver.find_element(By.XPATH, '//span[@class="slider"]')
-    status_text.click()
-    time.sleep(1)
+            try:
+            # 現在のtryをこちらに移動
+                continue_button = driver.find_element(By.XPATH, '//a[text()="同意する"]')
+                continue_button.click()
+                print("次のボタンがクリックされました。")
+                break
+            except:
+                attempts += 1
+                print("次のボタンが見つかりませんでした。")
+                if attempts < max_retries:
+                    time.sleep(2)  # 2秒待機してから再試行
+                else:
+                    print("最大試行回数に達しました。処理を終了します。")
+    time.sleep(5)
+
 
 def on_Cliqwork_end():
 
@@ -530,59 +633,34 @@ def on_Cliqwork_end():
         print("ボタンが見つかりませんでした。処理をスキップします。")
 
     time.sleep(5)
-    max_retries = 5  # 最大試行回数
+    max_retries = 3  # 最大試行回数
     attempts = 0
+
     while attempts < max_retries:
         try:
-             continue_button = driver.find_element(By.XPATH, '//a[text()="同意する"]')
-             continue_button.click()
-             print("次のボタンがクリックされました。")
-             break
+        # まず、status_text をクリックする処理
+            status_text = driver.find_element(By.XPATH, '//span[@class="slider"]')
+            status_text.click()
+            print("ステータスのテキストがクリックされました。")
+            break
         except:
-             attempts += 1
-             print("次のボタンが見つかりませんでした。")
-             if attempts < max_retries:
-                time.sleep(2)  # 2秒待機してから再試行
-             else:
-                 print("最大試行回数に達しました。処理を終了します。")
-    time.sleep(5)
-
-    time.sleep(5)
-    status_text = driver.find_element(By.XPATH, '//span[@class="slider"]')
-    status_text.click()
-    time.sleep(1)
+            try:
+            # 現在のtryをこちらに移動
+                continue_button = driver.find_element(By.XPATH, '//a[text()="同意する"]')
+                continue_button.click()
+                print("次のボタンがクリックされました。")
+                break
+            except:
+                attempts += 1
+                print("次のボタンが見つかりませんでした。")
+                if attempts < max_retries:
+                    time.sleep(2)  # 2秒待機してから再試行
+                else:
+                    print("最大試行回数に達しました。処理を終了します。")
+    time.sleep(3)
     messagebox.showinfo("Freee", "今日も一日お疲れ様でした。")
     time.sleep(1)
     window.quit()
-
-def on_kyuukei_end():
-    global end
-    end = datetime.now().strftime("%Y-%m-%d %H:%M")
-    times_label.config(text=times_label.cget("text") + f"休憩終了: {end}\n")
-    #window.after(1000, on_Cliqkyuukei_end)
-
-
-    options = Options()
-    options.add_argument("--headless")  # ヘッドレスモードでバックグラウンド実行
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-gpu")
-
-    driver = webdriver.Chrome(options=options)
-    driver.get(free_url)
-    time.sleep(3)
-
-    login_field = driver.find_element(By.XPATH, '//*[@id="loginIdField"]')
-    login_field.send_keys(user_id)
-    password_field = driver.find_element(By.XPATH, '//*[@id="passwordField"]')
-    password_field.send_keys(user_password)
-    login_button = driver.find_element(By.XPATH, '//span[text()="ログイン"]')
-    login_button.click()
-    time.sleep(5)
-
-    button3 = driver.find_element(By.XPATH, '//span[text()="休憩終了"]')
-    button3.click()
-    time.sleep(5)
 
 def on_home():
     global home
@@ -606,38 +684,209 @@ def show_description_window():
     # 新しいウィンドウ（Toplevel）を作成
     description_window = tk.Toplevel(window)
     description_window.title("説明文")
-    description_window.geometry("500x400")
+    description_window.geometry("500x500")
+
+
+    # コピー機能
 
     # 説明文を表示する複数のLabelを設定
-    description_label2 = tk.Label(description_window, text="ツールについて\n", wraplength=350, justify="left", fg="blue")
+    description_label2 = tk.Label(description_window, text="ツールについて\n", wraplength=350, justify="left", fg="red")
     description_label2.pack(pady=2)
 
-    description_label1 = tk.Label(description_window, text="このボタンの機能は以下の通りです。\n"
-                                         "出勤 : 出勤時にボタンを押すと打刻が開始されます。\n"
-                                         "休憩開始 : 勤務時間内での休憩開始時間が登録されます。\n"
-                                         "ホーム : Freeeのホーム画面が表示されます。\n"
-                                         "退勤 : 退勤時にボタンを押すと打刻が終了されます。\n"
-                              , wraplength=350, justify="left")
+    description_label1 = tk.Label(
+        description_window,
+        text=(
+            "このツールは、業務の効率化を目指して\n"
+            "よく使われる作業を自動化または簡素化するための機能を集めたものです。\n"
+            "\n"
+            "出勤 : 出勤時にボタンを押すと打刻が開始されます。\n"
+            "\n"
+            "退勤 : 退勤時にボタンを押すと打刻が終了されます。\n"
+            "\n"
+            "Cliq休憩開始 : Cliqのステータスをお昼休憩に変更します。\n"
+            "\n"
+            "Freeeホーム : Freeeのホーム画面が表示されます。\n"
+            "\n"
+            "Cliqホーム : Cliqのホーム画面が表示されます。\n"
+            
+            
+        ),
+        wraplength=350,
+        justify="left"
+    )
     description_label1.pack(pady=2)
 
-    description_label2 = tk.Label(description_window, text="Cliq連携", wraplength=350, justify="left", fg="red")
-    description_label2.pack(pady=2)
-
-    description_label3 = tk.Label(description_window, text="CliqとFreeeのアカウント情報を同一しておくと\n"
-                                    "出勤・休憩開始・退勤の際に連携してステータスを変更します。\n"
-
-                            , wraplength=350, justify="left")
+    """description_label3 = tk.Label(description_window, text="Cliq連携", wraplength=350, justify="left", fg="red")
     description_label3.pack(pady=2)
 
-    description_label4 = tk.Label(description_window, text="休憩について\n", wraplength=350, justify="left", fg="red")
-    description_label4.pack(pady=2)
+    description_label4 = tk.Label(
+        description_window,
+        text=(
+            "CliqとFreeeのアカウント情報を同一しておくと\n"
+            "出勤・休憩開始・退勤の際に連携してステータスを変更します。\n"
+        ),
+        wraplength=350,
+        justify="left"
+    )
+    description_label4.pack(pady=2)"""
 
-    description_label5 = tk.Label(description_window, text="休憩時、ツールを開いたままにしておくと\n"
-                                  "休憩開始60分後に自動で休憩終了を打刻します。\n"
-
-                                    , wraplength=350, justify="left")
+    description_label5 = tk.Label(description_window, text="お問い合わせ\n", wraplength=350, justify="left", fg="red")
     description_label5.pack(pady=2)
 
+    description_label6 = tk.Label(
+        description_window,
+        text=(
+            "ご使用中にお気づきの問題点や改善のご要望がございましたら、\n以下をクリックし、お送りください。\n"
+        ),
+        wraplength=350,
+        justify="left"
+    )
+    description_label6.pack(pady=2)
+
+    def open_link():
+        """リンクをブラウザで開く"""
+        url = "https://docs.google.com/forms/d/e/1FAIpQLSdaSTK_DpkQBCV8hezp7JWfhpXSzpjkxlmEf9GRTp4FIDReZw/viewform?vc=0&c=0&w=1&flr=0"
+        webbrowser.open(url)
+
+    # ハイパーリンク風のLabelを作成
+    link_label = tk.Label(
+        description_window,
+        text="問い合わせ先ページ表示",
+        fg="blue",
+        cursor="hand2",
+        wraplength=350,
+        justify="left"
+    )
+    link_label.pack(pady=10)
+
+    # Labelクリック時にリンクを開く
+    link_label.bind("<Button-1>", lambda e: open_link())
+
+
+
+    # ステータス表示用ラベル
+    status_label = tk.Label(description_window, text="", fg="red")
+    status_label.pack(pady=5)
+
+    
+
+
+
+
+
+
+
+
+
+
+# start work 
+try:
+    # startwork_click_timedata が辞書の場合
+    if isinstance(startwork_click_timedata, dict):
+        formatted_data = json.dumps(startwork_click_timedata, ensure_ascii=False, indent=4).replace('"', '')
+    else:
+        formatted_data = str(startwork_click_timedata).replace('"', '')
+
+
+
+    record_date = datetime.strptime(formatted_data, "%Y-%m-%d %H:%M:%S").date()
+    current_date = datetime.now()
+    current_date_only = current_date.date()
+    if record_date < current_date_only:
+        breaktime = ""
+    else:
+        breaktime = text=f"出勤時刻:{formatted_data}"
+
+    
+    # ラベル作成
+    break_label = tk.Label(window, text=breaktime)
+    break_label.pack(pady=10)
+
+except Exception as e:
+    # エラーが発生した場合、処理を無視して何もしない
+    pass
+
+# break start 
+try:
+    # startrest_click_timedata が辞書の場合
+    if isinstance(startrest_click_timedata, dict):
+        formatted_data = json.dumps(startrest_click_timedata, ensure_ascii=False, indent=4).replace('"', '')
+    else:
+        formatted_data = str(startrest_click_timedata).replace('"', '')
+
+    record_date = datetime.strptime(formatted_data, "%Y-%m-%d %H:%M:%S").date()
+    current_date = datetime.now()
+    current_date_only = current_date.date()
+    if record_date < current_date_only:
+        breakstarttime = ""
+    else:
+        breakstarttime = text=f"休憩開始:{formatted_data}"
+        
+    # ラベル作成
+    break_label = tk.Label(window, text=breakstarttime)
+    break_label.pack(pady=10)
+
+except Exception as e:
+    # エラーが発生した場合、処理を無視して何もしない
+    pass
+
+# break end
+
+try:
+    # endrest_click_timedata が辞書の場合
+    if isinstance(endrest_click_timedata, dict):
+        formatted_data = json.dumps(endrest_click_timedata, ensure_ascii=False, indent=4).replace('"', '')
+    else:
+        formatted_data = str(endrest_click_timedata).replace('"', '')
+
+    record_date = datetime.strptime(formatted_data, "%Y-%m-%d %H:%M:%S").date()
+    current_date = datetime.now()
+    current_date_only = current_date.date()
+    if record_date < current_date_only:
+        breakendtime = ""
+    else:
+        breakendtime = text=f"休憩終了:{formatted_data}"
+
+    # ラベル作成
+    break_label = tk.Label(window, text=breakendtime)
+    break_label.pack(pady=10)
+except Exception as e:
+    # エラーが発生した場合、処理を無視して何もしない
+    pass
+#  end work
+
+try:
+    if isinstance(startwork_click_timedata, dict):
+        formatted_data = json.dumps(startwork_click_timedata, ensure_ascii=False, indent=4).replace('"', '')
+    else:
+        formatted_data = str(startwork_click_timedata).replace('"', '')
+
+
+
+    record_date = datetime.strptime(formatted_data, "%Y-%m-%d %H:%M:%S").date()
+    current_date = datetime.now()
+    current_date_only = current_date.date()
+    if record_date < current_date_only:
+        if os.path.exists(startworkt_click_time):  # Cliqcredentials_fileが存在する場合
+        # メッセージボックスで警告を表示
+            messagebox.showwarning(
+            "退勤処理未完了",  # メッセージボックスのタイトル
+            "前回の退勤処理が行われていません。\nFreeeホームボタンクリックで勤怠確認できます。"  # メッセージ
+        )
+            if os.path.exists(startworkt_click_time):
+               os.remove(startworkt_click_time)  # ファイル削除
+               print(f"{startworkt_click_time} は削除されました。")
+            else:
+               print(f"{startworkt_click_time} は存在しません。削除できません。")
+        else:
+            print("退勤処理済み")
+    else:
+        breaktime = text=f"出勤時刻:{formatted_data}"
+    # ここで必要な処理を実行
+    
+except Exception as e:
+    # エラーが発生した場合、処理を無視して何もしない
+    pass
 # Label to display times
 times_label = tk.Label(window, text="", justify="left")
 times_label.pack(pady=10)
@@ -646,17 +895,19 @@ times_label.pack(pady=10)
 ok_button = tk.Button(window, text="出勤", command=on_ok, width=5, height=1)
 ok_button.pack(side="left", padx=10, pady=10)
 
-start_button = tk.Button(window, text="休憩開始", command=on_start, width=7, height=1)
+start_button = tk.Button(window, text="Cliq休憩開始", command=on_Cliqkyuukei_start, width=10, height=1)
 start_button.pack(side="left", padx=10, pady=10)
+
+end_button = tk.Button(window, text="退勤", command=on_end, width=5, height=1)
+end_button.pack(side="left", padx=5, pady=5)
 
 home_button = tk.Button(window, text="Freeeホーム", command=on_home, width=8, height=1)
 home_button.pack(side="left", padx=15, pady=15)
 
-kyuukei_end_button = tk.Button(window, text="Cliqホーム", command=on_Cliqk_home, width=8, height=1)
-kyuukei_end_button.pack(side="left", padx=10, pady=10)
+kyuukei_end_button = tk.Button(window, text="Cliqホーム", command=on_Cliqk_home, width=11, height=1)
+kyuukei_end_button.pack(side="left", padx=15, pady=15)
 
-end_button = tk.Button(window, text="退勤", command=on_end, width=5, height=1)
-end_button.pack(side="left", padx=10, pady=10)
+
 
 
 
