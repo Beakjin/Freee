@@ -1,4 +1,3 @@
-import threading
 import tkinter as tk
 from tkinter import messagebox, simpledialog
 from datetime import datetime, timedelta
@@ -9,7 +8,6 @@ from selenium.webdriver.common.keys import Keys
 import time
 import os
 import json
-import pyperclip
 from tkinter import font
 import webbrowser
 
@@ -160,7 +158,6 @@ def on_ok():
       
         options = Options()
         options.add_argument("--headless")  # ヘッドレスモードでバックグラウンド実行
-        options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-gpu")
 
@@ -223,7 +220,6 @@ def on_ok():
     
         options = Options()
         options.add_argument("--headless")  # ヘッドレスモードでバックグラウンド実行
-        options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-gpu")
 
@@ -287,11 +283,6 @@ def on_ok():
     btn_10am.pack(pady=5)
     # 現在の出勤時刻を取得
 
-    
-
-
-    
-
 def on_end():
     
     global taikin
@@ -301,7 +292,6 @@ def on_end():
 
     options = Options()
     options.add_argument("--headless")  # ヘッドレスモードでバックグラウンド実行
-    options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
 
@@ -320,8 +310,7 @@ def on_end():
     button1 = driver.find_element(By.XPATH, '//span[text()="退勤"]')
     button1.click()
     time.sleep(5)
-    current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
+    
     try:
     # ファイルが存在するかチェック
        if os.path.exists(startworkt_click_time):
@@ -353,7 +342,6 @@ def on_kyuukei_end():
 
     options = Options()
     options.add_argument("--headless")  # ヘッドレスモードでバックグラウンド実行
-    options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
 
@@ -397,7 +385,7 @@ def on_Cliqk_home():
     
     login_field = driver.find_element(By.XPATH, '//*[@id="login_id"]')
     login_field.send_keys(Cliquser_id)
-    next_button = driver.find_element(By.XPATH, '//span[text()="次へ"]')
+    next_button = driver.find_element(By.XPATH, '//*[@id="nextbtn"]/span')
     next_button.click()    
     time.sleep(5)
     password_field = driver.find_element(By.XPATH, '//*[@id="password"]')
@@ -405,13 +393,49 @@ def on_Cliqk_home():
     time.sleep(5)
     login_button = driver.find_element(By.XPATH, '//*[@id="nextbtn"]/span')
     login_button.click()
+    time.sleep(5)
+    max_retries = 3  # 最大試行回数
+    attempts = 0
+    try:
+        # 要素を探してクリック
+        button = driver.find_element(By.XPATH, '//a[@class="succbutton" and text()="確認する"]')
+        button.click()
+        print("ボタンをクリックしました。")
+    except:
+        # 要素が見つからない場合はスキップ
+        print("ボタンが見つかりませんでした。処理をスキップします。")
+    time.sleep(5)
+    while attempts < max_retries:
+        try:
+        # まず、status_text をクリックする処理
+            status_text = driver.find_element(By.XPATH, '//a[text()="同意する"]')
+            status_text.click()
+            print("ステータスのテキストがクリックされました。")
+            break
+        except:
+            try:
+            # 現在のtryをこちらに移動
+                continue_button = driver.find_element(By.XPATH, '//a[@class="succbutton" and text()="確認する"]')
+                continue_button.click()
+                print("次のボタンがクリックされました。")
+                time.sleep(5)
+                status_text = driver.find_element(By.XPATH, '//a[text()="同意する"]')
+                status_text.click()
+                break
+            except:
+                attempts += 1
+                print("次のボタンが見つかりませんでした。")
+                if attempts < max_retries:
+                    time.sleep(2)  # 2秒待機してから再試行
+                else:
+                    print("最大試行回数に達しました。処理を終了します。")
+
     window.after()
     
 def on_Cliqkyuukei_start():
     beakstart = datetime.now().strftime("%Y-%m-%d %H:%M")
     options = Options()
     options.add_argument("--headless")  # ヘッドレスモードでバックグラウンド実行
-    options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
     
@@ -421,7 +445,7 @@ def on_Cliqkyuukei_start():
 
     login_field = driver.find_element(By.XPATH, '//*[@id="login_id"]')
     login_field.send_keys(Cliquser_id)
-    next_button = driver.find_element(By.XPATH, '//span[text()="次へ"]')
+    next_button = driver.find_element(By.XPATH, '//*[@id="nextbtn"]/span')
     next_button.click()    
     time.sleep(5)
     password_field = driver.find_element(By.XPATH, '//*[@id="password"]')
@@ -485,7 +509,6 @@ def on_Cliqkyuukei_end():
 
     options = Options()
     options.add_argument("--headless")  # ヘッドレスモードでバックグラウンド実行
-    options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
     
@@ -495,7 +518,7 @@ def on_Cliqkyuukei_end():
 
     login_field = driver.find_element(By.XPATH, '//*[@id="login_id"]')
     login_field.send_keys(Cliquser_id)
-    next_button = driver.find_element(By.XPATH, '//span[text()="次へ"]')
+    next_button = driver.find_element(By.XPATH, '//*[@id="nextbtn"]/span')
     next_button.click()    
     time.sleep(5)
     password_field = driver.find_element(By.XPATH, '//*[@id="password"]')
@@ -529,6 +552,9 @@ def on_Cliqkyuukei_end():
                 continue_button = driver.find_element(By.XPATH, '//a[text()="同意する"]')
                 continue_button.click()
                 print("次のボタンがクリックされました。")
+                time.sleep(5)
+                status_text = driver.find_element(By.XPATH, "//div[contains(@class, 'laptop-work')]")
+                status_text.click()
                 break
             except:
                 attempts += 1
@@ -539,12 +565,10 @@ def on_Cliqkyuukei_end():
                     print("最大試行回数に達しました。処理を終了します。")
     time.sleep(5)
 
-
 def on_Cliqwork_start():
 
     options = Options()
     options.add_argument("--headless")  # ヘッドレスモードでバックグラウンド実行
-    options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
     
@@ -554,7 +578,7 @@ def on_Cliqwork_start():
     
     login_field = driver.find_element(By.XPATH, '//*[@id="login_id"]')
     login_field.send_keys(Cliquser_id)
-    next_button = driver.find_element(By.XPATH, '//span[text()="次へ"]')
+    next_button = driver.find_element(By.XPATH, '//*[@id="nextbtn"]/span')
     next_button.click()    
     time.sleep(5)
     password_field = driver.find_element(By.XPATH, '//*[@id="password"]')
@@ -588,6 +612,9 @@ def on_Cliqwork_start():
                 continue_button = driver.find_element(By.XPATH, '//a[text()="同意する"]')
                 continue_button.click()
                 print("次のボタンがクリックされました。")
+                time.sleep(5)
+                status_text = driver.find_element(By.XPATH, '//span[@class="slider"]')
+                status_text.click()
                 break
             except:
                 attempts += 1
@@ -598,12 +625,10 @@ def on_Cliqwork_start():
                     print("最大試行回数に達しました。処理を終了します。")
     time.sleep(5)
 
-
 def on_Cliqwork_end():
 
     options = Options()
     options.add_argument("--headless")  # ヘッドレスモードでバックグラウンド実行
-    options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
     
@@ -613,7 +638,7 @@ def on_Cliqwork_end():
     
     login_field = driver.find_element(By.XPATH, '//*[@id="login_id"]')
     login_field.send_keys(Cliquser_id)
-    next_button = driver.find_element(By.XPATH, '//span[text()="次へ"]')
+    next_button = driver.find_element(By.XPATH, '//*[@id="nextbtn"]/span')
     next_button.click()    
     time.sleep(5)
     password_field = driver.find_element(By.XPATH, '//*[@id="password"]')
@@ -628,6 +653,9 @@ def on_Cliqwork_end():
         button = driver.find_element(By.XPATH, '//a[@class="succbutton" and text()="確認する"]')
         button.click()
         print("ボタンをクリックしました。")
+        time.sleep(5)
+        status_text = driver.find_element(By.XPATH, '//span[@class="slider"]')
+        status_text.click()
     except:
         # 要素が見つからない場合はスキップ
         print("ボタンが見つかりませんでした。処理をスキップします。")
@@ -648,6 +676,9 @@ def on_Cliqwork_end():
             # 現在のtryをこちらに移動
                 continue_button = driver.find_element(By.XPATH, '//a[text()="同意する"]')
                 continue_button.click()
+                time.sleep(5)
+                status_text = driver.find_element(By.XPATH, '//span[@class="slider"]')
+                status_text.click()
                 print("次のボタンがクリックされました。")
                 break
             except:
@@ -871,7 +902,7 @@ try:
         # メッセージボックスで警告を表示
             messagebox.showwarning(
             "退勤処理未完了",  # メッセージボックスのタイトル
-            "前回の退勤処理が行われていません。\nFreeeホームボタンクリックで勤怠確認できます。"  # メッセージ
+            "前回の退勤処理が行われていません。\nFreeeホームボタンクリックで前日の勤怠を完了させてください。"  # メッセージ
         )
             if os.path.exists(startworkt_click_time):
                os.remove(startworkt_click_time)  # ファイル削除
