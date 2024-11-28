@@ -10,6 +10,7 @@ import os
 import json
 from tkinter import font
 import webbrowser
+import sys
 
 # Freee login URL
 free_url = "https://accounts.secure.freee.co.jp/sessions/new?redirect_url=https%3A%2F%2Fp.secure.freee.co.jp%2Fusers%2Fafter_login%3Fhash%3D&service_name=payroll&sign_up_url=https%3A%2F%2Faccounts.secure.freee.co.jp%2Fsign_up%3Finitial_service%3Dpayroll%26login_url%3Dhttps%253A%252F%252Fp.secure.freee.co.jp%252F%26prefer%3Demail%26redirect_url%3Dhttps%253A%252F%252Fp.secure.freee.co.jp%252Factivation%26service_name%3Dpayroll%26verification_type%3Dcode"
@@ -154,7 +155,7 @@ def on_ok():
     def select_9am():
         print("9時出勤が選択されました")
         shukkin = datetime.now().strftime("%Y-%m-%d %H:%M")
-        window.after(500, on_Cliqwork_start)
+
       
         options = Options()
         options.add_argument("--headless")  # ヘッドレスモードでバックグラウンド実行
@@ -174,10 +175,32 @@ def on_ok():
         login_button.click()
         time.sleep(5)
         try:
+            elements = driver.find_elements(By.XPATH, '//span[text()="ログイン"]')
+            if elements:
+                root = tk.Tk()  # tkinterのウィンドウ作成
+                root.withdraw()  # メインウィンドウを非表示にする
+                messagebox.showerror("エラー", "Freeeにてログインが失敗しました。")
+                root.destroy()  # ダイアログを閉じた後、ウィンドウを破
+                return 
+            else:
+                print("'ログイン'要素は存在しません。正常に処理を続行します。")
+        except Exception as e:
+            root = tk.Tk()
+            root.withdraw()
+            messagebox.showerror("例外エラー", f"エラーが発生しました: {str(e)}")
+            root.destroy()
+            return 
+            
+        try:
             button = driver.find_element(By.XPATH, '//span[text()="出勤"]')
             button.click()
         except:
             print("エラー: '出勤'ボタンが見つかりませんでした。処理をスキップします。")
+            root = tk.Tk()  # tkinterのウィンドウ作成
+            root.withdraw()  # メインウィンドウを非表示にする
+            messagebox.showerror("エラー", "Freeeにて出勤ボタンが見つかりませんでした。")
+            root.destroy() 
+            return
 
         time.sleep(5)
 
@@ -211,12 +234,14 @@ def on_ok():
 
         times_label.config(text=times_label.cget("text") + f"出勤時刻: {shukkin}\n")
         print(f"修憩開始ボタンのクリック時刻を {startwork_click_time} に保存しました。")
+        window.after(500, on_Cliqwork_start)
         new_window.destroy()
+        
 
     def select_10am():
         print("10時出勤が選択されました")
         shukkin = datetime.now().strftime("%Y-%m-%d %H:%M")
-        window.after(500, on_Cliqwork_start)
+        
     
         options = Options()
         options.add_argument("--headless")  # ヘッドレスモードでバックグラウンド実行
@@ -235,12 +260,33 @@ def on_ok():
         login_button = driver.find_element(By.XPATH, '//span[text()="ログイン"]')
         login_button.click()
         time.sleep(5)
+        try:
+            elements = driver.find_elements(By.XPATH, '//span[text()="ログイン"]')
+            if elements:
+                root = tk.Tk()  # tkinterのウィンドウ作成
+                root.withdraw()  # メインウィンドウを非表示にする
+                messagebox.showerror("エラー", "Freeeにてログインが失敗しました。")
+                root.destroy()  # ダイアログを閉じた後、ウィンドウを破
+                return 
+            else:
+                print("'ログイン'要素は存在しません。正常に処理を続行します。")
+        except Exception as e:
+            root = tk.Tk()
+            root.withdraw()
+            messagebox.showerror("例外エラー", f"エラーが発生しました: {str(e)}")
+            root.destroy()
+            return  
         
         try:
             button = driver.find_element(By.XPATH, '//span[text()="出勤"]')
             button.click()
         except:
             print("エラー: '出勤'ボタンが見つかりませんでした。処理をスキップします。")
+            root = tk.Tk()  # tkinterのウィンドウ作成
+            root.withdraw()  # メインウィンドウを非表示にする
+            messagebox.showerror("エラー", "Freeeにて出勤ボタンが見つかりませんでした。")
+            root.destroy() 
+            return 
 
         time.sleep(5)
 
@@ -272,6 +318,7 @@ def on_ok():
 
         times_label.config(text=times_label.cget("text") + f"出勤時刻: {shukkin}\n")
         print(f"修憩開始ボタンのクリック時刻を {startwork_click_time} に保存しました。")
+        window.after(500, on_Cliqwork_start)
         new_window.destroy()        
         
 
@@ -288,7 +335,7 @@ def on_end():
     global taikin
     taikin = datetime.now().strftime("%Y-%m-%d %H:%M")
 
-    window.after(1000, on_Cliqwork_end)
+    
 
     options = Options()
     options.add_argument("--headless")  # ヘッドレスモードでバックグラウンド実行
@@ -306,11 +353,41 @@ def on_end():
     login_button = driver.find_element(By.XPATH, '//span[text()="ログイン"]')
     login_button.click()
     time.sleep(5)
-
-    button1 = driver.find_element(By.XPATH, '//span[text()="退勤"]')
-    button1.click()
+    try:
+            elements = driver.find_elements(By.XPATH, '//span[text()="ログイン"]')
+            if elements:
+                root = tk.Tk()  # tkinterのウィンドウ作成
+                root.withdraw()  # メインウィンドウを非表示にする
+                messagebox.showerror("エラー", "Freeeにてログインが失敗しました。")
+                root.destroy()  # ダイアログを閉じた後、ウィンドウを破
+                return 
+            else:
+                print("'ログイン'要素は存在しません。正常に処理を続行します。")
+    except Exception as e:
+        root = tk.Tk()
+        root.withdraw()
+        messagebox.showerror("例外エラー", f"エラーが発生しました: {str(e)}")
+        root.destroy()
+        return 
     time.sleep(5)
-    
+
+    try:
+        button1 = driver.find_element(By.XPATH, '//span[text()="退勤"]')
+        button1.click()
+        time.sleep(2)  # 少し待機してから確認
+        try:
+            driver.find_element(By.XPATH, '//span[text()="退勤"]')
+            print("ボタンがまだ存在しています（クリックされていないか、遷移していない）。")
+        except:
+            print("ボタンは存在しません（クリックされたか、遷移しました）。")
+        print("退勤打刻成功")
+    except:
+        print("エラー: '退勤'ボタンが見つかりませんでした。処理をスキップします。")
+        root = tk.Tk()  # tkinterのウィンドウ作成
+        root.withdraw()  # メインウィンドウを非表示にする
+        messagebox.showerror("エラー", "Freeeにて出勤処理が失敗しました。")
+        root.destroy() 
+        return  
     try:
     # ファイルが存在するかチェック
        if os.path.exists(startworkt_click_time):
@@ -332,45 +409,7 @@ def on_end():
     except Exception as e:
     # エラーが発生した場合、処理を無視して何もしない
        pass
-
-def on_kyuukei_end():
-    global end
-    end = datetime.now().strftime("%Y-%m-%d %H:%M")
-    times_label.config(text=times_label.cget("text") + f"休憩終了: {end}\n")
-    #window.after(1000, on_Cliqkyuukei_end)
-
-
-    options = Options()
-    options.add_argument("--headless")  # ヘッドレスモードでバックグラウンド実行
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-gpu")
-
-    driver = webdriver.Chrome(options=options)
-    driver.get(free_url)
-    time.sleep(3)
-
-    login_field = driver.find_element(By.XPATH, '//*[@id="loginIdField"]')
-    login_field.send_keys(user_id)
-    password_field = driver.find_element(By.XPATH, '//*[@id="passwordField"]')
-    password_field.send_keys(user_password)
-    login_button = driver.find_element(By.XPATH, '//span[text()="ログイン"]')
-    login_button.click()
-    time.sleep(5)
-
-    button3 = driver.find_element(By.XPATH, '//span[text()="休憩終了"]')
-    button3.click()
-    time.sleep(5)
-    current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-
-            # JSONファイルに保存
-    data = current_time
-    endrest_click_time = "endrest_click_time.json"
-
-            # ファイルに書き込み
-    with open(endrest_click_time, 'w', encoding='utf-8') as file:
-         json.dump(data, file, ensure_ascii=False, indent=4)
-
-    print(f"修憩開始ボタンのクリック時刻を {endrest_click_time} に保存しました。")
+    window.after(1000, on_Cliqwork_end)
 
 def on_Cliqk_home():
     print(f"Cliq ユーザーID: {user_id}")
@@ -391,7 +430,8 @@ def on_Cliqk_home():
     password_field = driver.find_element(By.XPATH, '//*[@id="password"]')
     password_field.send_keys(Cliquser_password)
     time.sleep(5)
-    login_button = driver.find_element(By.XPATH, '//*[@id="nextbtn"]/span')
+    login_button = driver.find_element(By.XPATH, '//*[@id="nextbtn"]/span') 
+
     login_button.click()
     time.sleep(5)
     max_retries = 3  # 最大試行回数
@@ -399,6 +439,15 @@ def on_Cliqk_home():
     try:
         # 要素を探してクリック
         button = driver.find_element(By.XPATH, '//a[@class="succbutton" and text()="確認する"]')
+        button.click()
+        print("ボタンをクリックしました。")
+    except:
+        # 要素が見つからない場合はスキップ
+        print("ボタンが見つかりませんでした。処理をスキップします。")
+    time.sleep(5)
+    try:
+        # 要素を探してクリック
+        button = driver.find_element(By.XPATH, '//a[@id="continue_button"]')
         button.click()
         print("ボタンをクリックしました。")
     except:
@@ -429,6 +478,11 @@ def on_Cliqk_home():
                     time.sleep(2)  # 2秒待機してから再試行
                 else:
                     print("最大試行回数に達しました。処理を終了します。")
+                    root = tk.Tk()  # tkinterのウィンドウ作成
+                    root.withdraw()  # メインウィンドウを非表示にする
+                    messagebox.showerror("エラー", "Cliqログインに失敗しました。")
+                    root.destroy() 
+                    return 
 
     window.after()
     
@@ -463,6 +517,15 @@ def on_Cliqkyuukei_start():
         # 要素が見つからない場合はスキップ
         print("ボタンが見つかりませんでした。処理をスキップします。")
     time.sleep(5)
+    try:
+        # 要素を探してクリック
+        button = driver.find_element(By.XPATH, '//a[@id="continue_button"]')
+        button.click()
+        print("ボタンをクリックしました。")
+    except:
+        # 要素が見つからない場合はスキップ
+        print("ボタンが見つかりませんでした。処理をスキップします。")
+    time.sleep(5)
     max_retries = 3  # 最大試行回数
     attempts = 0
 
@@ -490,6 +553,11 @@ def on_Cliqkyuukei_start():
                     time.sleep(2)  # 2秒待機してから再試行
                 else:
                     print("最大試行回数に達しました。処理を終了します。")
+                    root = tk.Tk()  # tkinterのウィンドウ作成
+                    root.withdraw()  # メインウィンドウを非表示にする
+                    messagebox.showerror("エラー", "Cliq休憩開始に失敗しました。")
+                    root.destroy()
+                    return
 
 
     time.sleep(5)
@@ -504,66 +572,6 @@ def on_Cliqkyuukei_start():
          json.dump(data, file, ensure_ascii=False, indent=4)
     times_label.config(text=times_label.cget("text") + f"休憩開始: {beakstart}\n")
     print(f"修憩開始ボタンのクリック時刻を {startrest_click_time} に保存しました。")
-
-def on_Cliqkyuukei_end():
-
-    options = Options()
-    options.add_argument("--headless")  # ヘッドレスモードでバックグラウンド実行
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-gpu")
-    
-    driver = webdriver.Chrome(options=options)
-    driver.get(Cliq_url)
-    time.sleep(3)
-
-    login_field = driver.find_element(By.XPATH, '//*[@id="login_id"]')
-    login_field.send_keys(Cliquser_id)
-    next_button = driver.find_element(By.XPATH, '//*[@id="nextbtn"]/span')
-    next_button.click()    
-    time.sleep(5)
-    password_field = driver.find_element(By.XPATH, '//*[@id="password"]')
-    password_field.send_keys(Cliquser_password)
-    time.sleep(5)
-    login_button = driver.find_element(By.XPATH, '//*[@id="nextbtn"]/span')
-    login_button.click()
-    time.sleep(10)
-    try:
-        # 要素を探してクリック
-        button = driver.find_element(By.XPATH, '//a[@class="succbutton" and text()="確認する"]')
-        button.click()
-        print("ボタンをクリックしました。")
-    except:
-        # 要素が見つからない場合はスキップ
-        print("ボタンが見つかりませんでした。処理をスキップします。")
-    time.sleep(5)
-    max_retries = 3  # 最大試行回数
-    attempts = 0
-
-    while attempts < max_retries:
-        try:
-        # まず、status_text をクリックする処理
-            status_text = driver.find_element(By.XPATH, "//div[contains(@class, 'laptop-work')]")
-            status_text.click()
-            print("ステータスのテキストがクリックされました。")
-            break
-        except:
-            try:
-            # 現在のtryをこちらに移動
-                continue_button = driver.find_element(By.XPATH, '//a[text()="同意する"]')
-                continue_button.click()
-                print("次のボタンがクリックされました。")
-                time.sleep(5)
-                status_text = driver.find_element(By.XPATH, "//div[contains(@class, 'laptop-work')]")
-                status_text.click()
-                break
-            except:
-                attempts += 1
-                print("次のボタンが見つかりませんでした。")
-                if attempts < max_retries:
-                    time.sleep(2)  # 2秒待機してから再試行
-                else:
-                    print("最大試行回数に達しました。処理を終了します。")
-    time.sleep(5)
 
 def on_Cliqwork_start():
 
@@ -595,7 +603,15 @@ def on_Cliqwork_start():
     except:
         # 要素が見つからない場合はスキップ
         print("ボタンが見つかりませんでした。処理をスキップします。")
-
+    try:
+        # 要素を探してクリック
+        button = driver.find_element(By.XPATH, '//a[@id="continue_button"]')
+        button.click()
+        print("ボタンをクリックしました。")
+    except:
+        # 要素が見つからない場合はスキップ
+        print("ボタンが見つかりませんでした。処理をスキップします。")
+    time.sleep(5)
     max_retries = 3  # 最大試行回数
     attempts = 0
 
@@ -623,6 +639,11 @@ def on_Cliqwork_start():
                     time.sleep(2)  # 2秒待機してから再試行
                 else:
                     print("最大試行回数に達しました。処理を終了します。")
+                    root = tk.Tk()  # tkinterのウィンドウ作成
+                    root.withdraw()  # メインウィンドウを非表示にする
+                    messagebox.showerror("エラー", "Cliq業務開始に失敗しました。")
+                    root.destroy()
+                    return 
     time.sleep(5)
 
 def on_Cliqwork_end():
@@ -654,12 +675,21 @@ def on_Cliqwork_end():
         button.click()
         print("ボタンをクリックしました。")
         time.sleep(5)
+        
         status_text = driver.find_element(By.XPATH, '//span[@class="slider"]')
         status_text.click()
     except:
         # 要素が見つからない場合はスキップ
         print("ボタンが見つかりませんでした。処理をスキップします。")
-
+    try:
+        # 要素を探してクリック
+        button = driver.find_element(By.XPATH, '//a[@id="continue_button"]')
+        button.click()
+        print("ボタンをクリックしました。")
+    except:
+        # 要素が見つからない場合はスキップ
+        print("ボタンが見つかりませんでした。処理をスキップします。")
+    time.sleep(5)
     time.sleep(5)
     max_retries = 3  # 最大試行回数
     attempts = 0
@@ -688,6 +718,11 @@ def on_Cliqwork_end():
                     time.sleep(2)  # 2秒待機してから再試行
                 else:
                     print("最大試行回数に達しました。処理を終了します。")
+                    root = tk.Tk()  # tkinterのウィンドウ作成
+                    root.withdraw()  # メインウィンドウを非表示にする
+                    messagebox.showerror("エラー", "Cliq退勤処理に失敗しました。")
+                    root.destroy()
+                    return   
     time.sleep(3)
     messagebox.showinfo("Freee", "今日も一日お疲れ様でした。")
     time.sleep(1)
@@ -706,8 +741,35 @@ def on_home():
     login_field.send_keys(user_id)
     password_field = driver.find_element(By.XPATH, '//*[@id="passwordField"]')
     password_field.send_keys(user_password)
-    login_button = driver.find_element(By.XPATH, '//span[text()="ログイン"]')
-    login_button.click()
+    try:
+        login_button = driver.find_element(By.XPATH, '//span[text()="ログイン"]')
+        login_button.click()
+    except:
+        root = tk.Tk()
+        root.withdraw()
+        messagebox.showerror("エラー", "ログインが見つかりませんでした。")
+        root.destroy()
+        return  
+    time.sleep(5)
+    try:
+        elements = driver.find_elements(By.XPATH, '//span[text()="ログイン"]')
+
+        if elements:
+            root = tk.Tk()  # tkinterのウィンドウ作成
+            root.withdraw()  # メインウィンドウを非表示にする
+            messagebox.showerror("エラー", "Freeeにてログインが失敗しました。")
+            root.destroy()  # ダイアログを閉じた後、ウィンドウを破 
+            return  
+        else:
+            print("'ログイン'要素は存在しません。正常に処理を続行します。")
+    except Exception as e:
+        root = tk.Tk()
+        root.withdraw()
+        messagebox.showerror("例外エラー", f"エラーが発生しました: {str(e)}")
+        root.destroy()
+
+        
+  
 
     window.after()
     
